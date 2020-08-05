@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import torchvision
-from torch.autograd import Variable
 import itertools
 from utils import *
 
@@ -16,7 +15,7 @@ class Cholesky(torch.autograd.Function):
         l, = ctx.saved_variables
         linv = l.inverse()
         inner = torch.tril(torch.mm(l.t(), grad_output)) * torch.tril(
-            1.0 - Variable(l.data.new(l.size(1)).fill_(0.5).diag()))
+            1.0 - torch.tensor(l.data.new(l.size(1)).fill_(0.5).diag()))
         s = torch.mm(linv.t(), torch.mm(inner, linv))
         return s
     
@@ -135,7 +134,7 @@ class DaGMM(nn.Module):
             det_cov.append((Cholesky.apply(cov_k.cpu() * (2*np.pi)).diag().prod()).unsqueeze(0))
             cov_diag = cov_diag + torch.sum(1 / cov_k.diag())
 
-        # K x D x D
+        # K x D x D2zd
         cov_inverse = torch.cat(cov_inverse, dim=0)
         # K
         det_cov = torch.cat(det_cov).cuda()
