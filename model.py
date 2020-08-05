@@ -8,7 +8,7 @@ from utils import *
 
 class Cholesky(torch.autograd.Function):
     def forward(ctx, a):
-        l = torch.potrf(a, False)
+        l = torch.cholesky(a)
         ctx.save_for_backward(l)
         return l
     def backward(ctx, grad_output):
@@ -130,8 +130,8 @@ class DaGMM(nn.Module):
             cov_k = cov[i] + to_var(torch.eye(D)*eps)
             cov_inverse.append(torch.inverse(cov_k).unsqueeze(0))
 
-            #det_cov.append(np.linalg.det(cov_k.data.cpu().numpy()* (2*np.pi)))
-            det_cov.append((Cholesky.apply(cov_k.cpu() * (2*np.pi)).diag().prod()).unsqueeze(0))
+            det_cov.append(torch.tensor(np.linalg.det(cov_k.data.cpu().numpy()* (2*np.pi))).unsqueeze(0))
+            # det_cov.append((Cholesky.apply(cov_k.cpu() * (2*np.pi)).diag().prod()).unsqueeze(0))
             cov_diag = cov_diag + torch.sum(1 / cov_k.diag())
 
         # K x D x D2zd
